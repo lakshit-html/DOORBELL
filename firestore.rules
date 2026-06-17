@@ -1,0 +1,160 @@
+rules_version = '2';
+
+// LocalKart Firestore security rules.
+// Role-based access control. The `users/{uid}.role` field is the source of
+// truth for a user's role and is set on signup; only an admin can change it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Helpers ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function userData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function hasRole(role) {
+      return isSignedIn() && userData().role == role;
+    }
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    // ---- users ----
+    match /users/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      // A user may create their own doc but NOT self-assign the admin role.
+      allow create: if isUser(uid) && request.resource.data.role != 'admin';
+      // Users can update their own profile but cannot change their role.
+      allow update: if (isUser(uid)
+                        && request.resource.data.role == resource.data.role)
+                       || isAdmin();
+      allow delete: if isAdmin();
+
+      // Saved addresses sub-collection — owner only.
+      match /addresses/{addressId} {
+        allow read, write: if isUser(uid);
+      }
+    }
+
+    // ---- shops ----
+    match /shops/{shopId} {
+      // Approved shops are publicly readable; owners/admins see their own.
+      allow read: if resource.data.isApproved == true
+                  || (isSignedIn() && resource.data.ownerId == request.auth.uid)
+                  || isAdmin();
+      // A shop owner creates a shop they own (unapproved by default).
+      allow create: if hasRole('shopOwner')
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.isApproved == false;
+      // Owners may edit their shop but cannot self-approve; admins can do both.
+      allow update: if isAdmin()
+                    || (isSignedIn()
+                        && resource.data.ownerId == request.auth.uid
+                        && request.resource.data.isApproved == resource.data.isApproved);
+      allow delete: if isAdmin();
+    }
+
+    // ---- products ----
+    match /products/{productId} {
+      allow read: if true; // catalogue is public
+      // Only the owner of the product's shop may write it.
+      allow create, update, delete: if isAdmin()
+        || (hasRole('shopOwner')
+            && get(/databases/$(database)/documents/shops/$(request.resource.data.shopId)).data.ownerId == request.auth.uid)
+        || (hasRole('shopOwner')
+            && get(/databases/$(database)/documents/shops/$(resource.data.shopId)).data.ownerId == request.auth.uid);
+    }
+
+    // ---- categories ----
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- coupons ----
+    match /coupons/{code} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ---- orders ----
+    match /orders/{orderId} {
+      // Visible to the customer, the shop owner, the assigned rider, or admin.
+      allow read: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.riderId == request.auth.uid ||
+        get(/databases/$(database)/documents/shops/$(resource.data.shopId)).data.ownerId == request.auth.uid ||
+        isAdmin()
+      );
+      // Customers place their own orders.
+      allow create: if hasRole('customer')
+                    && request.resource.data.customerId == request.auth.uid;
+      // Shop owner, assigned rider (or one claiming it), and admin can update.
+      allow update: if isSignedIn() && (
+        get(/databases/$(database)/documents/shops/$(resource.data.shopId)).data.ownerId == request.auth.uid ||
+        resource.data.riderId == request.auth.uid ||
+        (hasRole('rider') && resource.data.riderId == null) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ---- riders ----
+    match /riders/{riderId} {
+      allow read: if isUser(riderId) || isAdmin() || isSignedIn();
+      // A rider registers their own profile, pending approval.
+      allow create: if isUser(riderId)
+                    && request.resource.data.approvalStatus == 'pending';
+      // Riders update their own location/status but not their approval; admins can approve.
+      allow update: if isAdmin()
+                    || (isUser(riderId)
+                        && request.resource.data.approvalStatus == resource.data.approvalStatus);
+      allow delete: if isAdmin();
+    }
+
+    // ---- reviews ----
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if hasRole('customer')
+                    && request.resource.data.customerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.customerId == request.auth.uid);
+    }
+
+    // ---- wallets ----
+    match /wallets/{uid} {
+      // NOTE: For demo simplicity the owner can write their wallet (the app's
+      // WalletRepository uses a client transaction). For a hardened production
+      // deployment, move all balance mutations to a Cloud Function and change
+      // these to `allow write: if isAdmin();` so balances can't be tampered with.
+      allow read: if isUser(uid) || isAdmin();
+      allow write: if isUser(uid) || isAdmin();
+      match /transactions/{txnId} {
+        allow read: if isUser(uid) || isAdmin();
+        allow write: if isUser(uid) || isAdmin();
+      }
+    }
+
+    // ---- notifications ----
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Marking read is the only client write allowed.
+      allow update: if isSignedIn()
+                    && resource.data.userId == request.auth.uid;
+      allow create, delete: if isAdmin();
+    }
+
+    // ---- supportTickets ----
+    match /supportTickets/{ticketId} {
+      allow read: if isSignedIn()
+                  && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

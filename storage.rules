@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// LocalKart Firebase Storage rules.
+// Reads are public (images are shown across the app); writes are scoped to the
+// owner and limited to reasonably-sized images.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024
+             && request.resource.contentType.matches('image/.*');
+    }
+
+    // Profile photos: owner-write, public-read.
+    match /users/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(uid) && isValidImage();
+    }
+
+    // Shop images: any signed-in user may upload under a shop path. Tighten to
+    // the shop owner via a Firestore lookup in production if required.
+    match /shops/{shopId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidImage();
+    }
+
+    // Product images.
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidImage();
+    }
+
+    // Rider KYC documents: private — only the rider and admins (admin reads via
+    // the Admin SDK, which bypasses these rules).
+    match /riders/{riderId}/{allPaths=**} {
+      allow read: if isOwner(riderId);
+      allow write: if isOwner(riderId) && isValidImage();
+    }
+  }
+}
