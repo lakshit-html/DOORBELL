@@ -1,14 +1,11 @@
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:doorbell/core/constants/firebase_constants.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/geo_utils.dart';
 import '../models/enums.dart';
 import '../models/shop_model.dart';
-import 'rider_repository.dart';
-import '../../data/repositories/user_repository.dart';
 
 /// Shop CRUD + nearby-shop discovery with hyperlocal radius support.
 class ShopRepository {
@@ -50,7 +47,9 @@ class ShopRepository {
     for (final doc in snap.docs) {
       final shop = ShopModel.fromDoc(doc);
       final d = GeoUtils.distanceKm(lat, lng, shop.latitude, shop.longitude);
-      if (d <= effectiveRadius) result.add(ShopWithDistance(shop, d));
+      if (d <= effectiveRadius) {
+        result.add(ShopWithDistance(shop, d));
+      }
     }
     result.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
     return result;
@@ -85,8 +84,8 @@ class ShopRepository {
     return allShops
         .map(
           (shop) => ShopWithDistance(
-            shop: shop,
-            distanceKm: GeoUtils.distanceKm(
+            shop,
+            _calculateDistance(
               latitude,
               longitude,
               shop.latitude,
@@ -147,15 +146,3 @@ class ShopRepository {
     'reviewedAt': FieldValue.serverTimestamp(),
   });
 }
-
-// Add the missing providers so they are globally accessible:
-final shopRepositoryProvider = Provider((ref) {
-  return ShopRepository(ref.watch(firestoreProvider));
-});
-
-final riderRepositoryProvider = Provider((ref) {
-  return RiderRepository(
-    ref.watch(firestoreProvider),
-    ref.watch(storageServiceProvider),
-  );
-});

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/firebase_providers.dart';
 import '../../../data/models/shop_model.dart';
-import '../../../data/repositories/shop_repository.dart' show ShopWithDistance;
 
 final nearbyShopsProvider = FutureProvider<List<ShopWithDistance>>((ref) async {
   final repo = ref.watch(shopRepositoryProvider);

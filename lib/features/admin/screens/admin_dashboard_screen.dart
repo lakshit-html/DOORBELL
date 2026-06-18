@@ -10,7 +10,7 @@ import '../../../data/models/enums.dart';
 import '../../../data/models/rider_model.dart';
 import '../../../data/models/shop_model.dart';
 import '../../auth/providers/auth_providers.dart';
-import '../admin_providers.dart' as admin_providers;
+import 'package:doorbell/features/admin/admin_providers.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -103,7 +103,7 @@ class _OverviewTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(adminStatsProvider);
+    final stats = ref.watch(admin_providers.adminStatsProvider);
     final pendingShops =
         ref.watch(admin_providers.pendingShopsProvider).value?.length ?? 0;
     final pendingRiders =

@@ -1,15 +1,12 @@
+import 'package:doorbell/data/repositories/rider_repository.dart';
+import 'package:doorbell/data/repositories/shop_repository.dart';
+import 'package:doorbell/features/admin/shop_repository_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/firebase_providers.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/rider_model.dart';
 import '../../data/models/shop_model.dart';
-
-// Repository Providers
-final shopRepositoryProvider = Provider((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return ShopRepository(firestore);
-});
 
 final riderRepositoryProvider = Provider((ref) {
   final firestore = ref.watch(firestoreProvider);

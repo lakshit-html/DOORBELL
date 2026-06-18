@@ -60,7 +60,7 @@ class RiderModel {
       currentLat: (loc?['lat'] as num?)?.toDouble(),
       currentLng: (loc?['lng'] as num?)?.toDouble(),
       approvalStatus: ApprovalStatus.fromString(
-        map['approvalStatus'] as String?,
+        map['approvalStatus'] as String? ?? 'pending',
       ),
       status: RiderStatus.fromString(map['status'] as String?),
       rating: (map['rating'] as num?)?.toDouble() ?? 0,

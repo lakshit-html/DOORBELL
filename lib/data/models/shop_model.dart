@@ -63,7 +63,7 @@ class ShopModel {
     rating: (map['rating'] as num?)?.toDouble() ?? 0,
     totalOrders: (map['totalOrders'] as num?)?.toInt() ?? 0,
     approvalStatus: ApprovalStatus.fromString(
-      map['approvalStatus'] as String?,
+      map['approvalStatus'] as String? ?? 'pending',
     ),
     isOpen: map['isOpen'] as bool? ?? true,
     openingHours: map['openingHours'] as String? ?? '9:00 AM - 9:00 PM',
