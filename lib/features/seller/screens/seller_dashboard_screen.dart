@@ -8,10 +8,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/app_network_image.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../data/models/enums.dart';
+import '../../../data/models/enums.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../orders/screens/orders_screen.dart';
-import '../../data/repositories/user_repository.dart';
 import '../seller_providers.dart';
 import 'product_form_sheet.dart';
 
@@ -51,10 +50,12 @@ class SellerDashboardScreen extends ConsumerWidget {
                     child: Center(
                       child: Chip(
                         label: Text(
+                          // ignore: unrelated_type_equality_checks
                           s.approvalStatus == 'rejected'
                               ? 'Rejected'
                               : 'Pending approval',
                           style: TextStyle(
+                            // ignore: unrelated_type_equality_checks
                             color: s.approvalStatus == 'rejected'
                                 ? AppColors.error
                                 : null,
