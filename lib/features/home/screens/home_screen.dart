@@ -27,6 +27,7 @@ class HomeScreen extends ConsumerWidget {
     final popularProducts = ref.watch(popularProductsProvider);
     final unread = ref.watch(unreadCountProvider);
     final user = ref.watch(currentUserProvider).value;
+    final location = ref.watch(locationProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
