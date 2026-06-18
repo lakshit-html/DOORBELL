@@ -10,7 +10,8 @@ import '../../../data/models/enums.dart';
 import '../../../data/models/rider_model.dart';
 import '../../../data/models/shop_model.dart';
 import '../../auth/providers/auth_providers.dart';
-import 'package:doorbell/features/admin/admin_providers.dart';
+import 'package:doorbell/features/admin/admin_providers.dart'
+    as admin_providers;
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});

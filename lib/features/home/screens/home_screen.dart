@@ -19,7 +19,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const userLat = 0.0;
+    const _ = 0.0;
     const userLng = 0.0;
 
     final nearbyShops = ref.watch(nearbyShopsProvider);
@@ -27,6 +27,7 @@ class HomeScreen extends ConsumerWidget {
     final popularProducts = ref.watch(popularProductsProvider);
     final unread = ref.watch(unreadCountProvider);
     final user = ref.watch(currentUserProvider).value;
+    final location = ref.watch(locationProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
