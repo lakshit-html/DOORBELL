@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter *)",
+      "Bash(dart *)",
+      "Bash(flutterfire *)",
+      "Bash(firebase *)",
+      "Bash(adb *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(cat *)",
+      "Bash(sed *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(mkdir *)",
+      "Bash(rm *)",
+      "Bash(zip *)",
+      "Bash(unzip *)"
+    ],
+    "deny": []
+  }
+}
